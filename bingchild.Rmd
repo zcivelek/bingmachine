@@ -81,7 +81,6 @@ load("bingmachine_child_CIs.RData")
 ```
 
 ```{r}
-
 ####Overall performance across age.
 bingchild_separate <- bingchild %>%
   filter(!is.na(correct)) %>%
@@ -95,18 +94,22 @@ plot.int=seq(from=min(bingchild_separate$agemonths),
              to=max(bingchild_separate$agemonths),length.out=129)
 
 ci.data<-boot.res$ci.predicted #I reduced the number of values for the confidence intervals. did not match the actual data.
-toDelete<- seq(2, nrow(ci.data),2)
-ci.data<-ci.data[toDelete,]
-ci.data
+#toDelete<- seq(2, nrow(ci.data),2)
+#ci.data<-ci.data[toDelete,]
+as.data.frame(ci.data)
+ci.data$plot.int <- c(plot.int)
+```
 
-scatter.int <- ggplot(ci.data, aes(y = ci.data$fitted)) +
+
+```{r}
+scatter.int <- ggplot(data=ci.data, aes(x = plot.int)) +
+  geom_ribbon( aes(x = ci.data$plot.int, y = ci.data$fitted, ymin = ci.data$lower.cl, ymax = ci.data$upper.cl, group = ci.data$condition), fill = "grey", alpha = 0.5)+
   geom_point(data=bingchild_separate, aes(x = agemonths, y = correct), size = bingchild_separate$n, alpha = 0.8) +
-  facet_wrap(~condition) + geom_segment(data=data.frame(condition="causal"))+ geom_segment(data=data.frame(condition="arbitrary")) +
-  geom_ribbon(data = ci.data%>%filter(condition=="causal"), aes(x = plot.int, y = ci.data$fitted, ymin = ci.data$lower.cl, ymax = ci.data$upper.cl, group = condition), fill = "grey", alpha = 0.5) +
-  geom_line(data = ci.data%>%filter(condition=="causal"), aes(x = plot.int, y = ci.data$fitted), lty = 2) +
-  geom_ribbon(data = ci.data%>%filter(condition=="arbitrary"), aes(x = plot.int, y = ci.data$fitted, ymin = ci.data$lower.cl, ymax = ci.data$upper.cl, group = condition), fill = "grey", alpha = 0.5) +
-  geom_line(data = ci.data%>%filter(condition=="arbitrary"), aes(x = plot.int, y = ci.data$fitted), lty = 2) + scale_x_continuous(breaks = seq(from = 36, to = 84, by = 4)) +
-  theme_bw() +
+  facet_wrap(~condition) + 
+ # geom_segment(data=data.frame(condition="causal"))+ #geom_segment(data=data.frame(condition="arbitrary")) +
+  geom_ribbon( aes(x = plot.int, y = ci.data$fitted, ymin = ci.data$lower.cl, ymax = ci.data$upper.cl, group = condition), fill = "grey", alpha = 0.5) +
+ geom_line( aes(x = plot.int, y = ci.data$fitted), lty = 2) +
+   theme_bw() +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
   xlab("Age in months") +
   ylab("Mean correct responses") +
