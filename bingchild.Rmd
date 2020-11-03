@@ -103,12 +103,12 @@ ci.data$plot.int <- c(plot.int)
 
 ```{r}
 scatter.int <- ggplot(data=ci.data, aes(x = plot.int)) +
-  geom_ribbon( aes(x = ci.data$plot.int, y = ci.data$fitted, ymin = ci.data$lower.cl, ymax = ci.data$upper.cl, group = ci.data$condition), fill = "grey", alpha = 0.5)+
+  geom_ribbon( aes(x = plot.int, y = fitted, ymin = lower.cl, ymax = upper.cl, group = condition), fill = "grey", alpha = 0.5)+
   geom_point(data=bingchild_separate, aes(x = agemonths, y = correct), size = bingchild_separate$n, alpha = 0.8) +
   facet_wrap(~condition) + 
  # geom_segment(data=data.frame(condition="causal"))+ #geom_segment(data=data.frame(condition="arbitrary")) +
-  geom_ribbon( aes(x = plot.int, y = ci.data$fitted, ymin = ci.data$lower.cl, ymax = ci.data$upper.cl, group = condition), fill = "grey", alpha = 0.5) +
- geom_line( aes(x = plot.int, y = ci.data$fitted), lty = 2) +
+  geom_ribbon( aes(x = plot.int, y = fitted, ymin = lower.cl, ymax = upper.cl, group = condition), fill = "grey", alpha = 0.5) +
+ geom_line( aes(x = plot.int, y = fitted), lty = 2) +
    theme_bw() +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
   xlab("Age in months") +
