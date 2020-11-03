@@ -67,7 +67,7 @@ str(bingchild)
 
 #running a new model for CI predictions
 contr<-glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=10000000))
-full.CI=glmer(correct ~ z.agemonths*condition + z.trialno + sex + (1|id) + (1|boxtype) + (0+z.trialno|id),data=bingchild, family=binomial, control=contr)
+full.CI=glmer(correct ~ z.agemonths*condition + z.trialno + sex.m.c + (1|id) + (1|boxtype) + (0+z.trialno|id),data=bingchild, family=binomial, control=contr)
 ```
 ```{r}
 #Getting confidence intervals for fitted values
