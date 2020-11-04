@@ -37,6 +37,7 @@ bingchild$sex=as.factor(bingchild$sex)
 bingchild$agecat=as.factor(bingchild$agecat)
 bingchild$condition=as.factor(bingchild$condition)
 bingchild$z.agemonths=as.vector(scale(bingchild$agemonths))
+bingchild$explanation=as.factor(bingchild$explanation)
 
 
 bingchild$agecat=relevel(bingchild$agecat, ref="three")
@@ -69,6 +70,7 @@ str(bingchild)
 contr<-glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=10000000))
 full.CI=glmer(correct ~ z.agemonths*condition + z.trialno + sex.m.c + (1|id) + (1|boxtype) + (0+z.trialno|id),data=bingchild, family=binomial, control=contr)
 ```
+
 ```{r}
 #Getting confidence intervals for fitted values
 
@@ -84,7 +86,7 @@ load("bingmachine_child_CIs.RData")
 ####Overall performance across age.
 bingchild_separate <- bingchild %>%
   filter(!is.na(correct)) %>%
-  group_by(id,  agemonths, condition) %>% 
+  group_by(id,  agemonths, condition, explanation) %>% 
   summarize(correct= mean(correct))%>%
   ungroup()%>%
   group_by(agemonths, condition)%>%
@@ -104,7 +106,7 @@ ci.data$plot.int <- c(plot.int)
 ```{r}
 scatter.int <- ggplot(data=ci.data, aes(x = plot.int)) +
   geom_ribbon( aes(x = plot.int, y = fitted, ymin = lower.cl, ymax = upper.cl, group = condition), fill = "grey", alpha = 0.5)+
-  geom_point(data=bingchild_separate, aes(x = agemonths, y = correct), size = bingchild_separate$n, alpha = 0.8) +
+  geom_point(data=bingchild_separate, aes(x = agemonths, y = correct, color=explanation), size = bingchild_separate$n, alpha = 0.8) +
   facet_wrap(~condition) + 
  # geom_segment(data=data.frame(condition="causal"))+ #geom_segment(data=data.frame(condition="arbitrary")) +
   geom_ribbon( aes(x = plot.int, y = fitted, ymin = lower.cl, ymax = upper.cl, group = condition), fill = "grey", alpha = 0.5) +
@@ -114,8 +116,10 @@ scatter.int <- ggplot(data=ci.data, aes(x = plot.int)) +
   xlab("Age in months") +
   ylab("Mean correct responses") +
   ylim(0, 1) +
-  geom_hline(yintercept = 0.50, color = "red", linetype = "dashed")
-
+  geom_hline(yintercept = 0.50, color = "red", linetype = "dashed") +scale_colour_manual(values = c("Dark Grey", "Black", "Red"), labels=c("no idea", "wrong", "correct"))
 scatter.int
+
+ggsave("performance in causal and arbitrary conditions.png",width = 10, height = 5, scale=0.7)
+
 ```
 
