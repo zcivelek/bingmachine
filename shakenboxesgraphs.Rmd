@@ -110,10 +110,10 @@ scatter.int <- ggplot(data=ci.data, aes(x = plot.int)) +
   xlab("Age in months") +
   ylab("Mean correct responses") +
   ylim(0, 1) +
-  geom_hline(yintercept = 0.50, color = "red", linetype = "dashed") +scale_colour_manual(values = c("Dark Grey", "Black", "Red"))+ scale_x_continuous(breaks = seq(from = 36, to = 72, by = 4))+theme(legend.position = "none")
+  geom_hline(yintercept = 0.50, color = "red", linetype = "dashed") +scale_colour_manual(values = c("Dark Grey", "Black", "Red"), labels=c("no idea", "wrong", "correct"))+ scale_x_continuous(breaks = seq(from = 36, to = 72, by = 4))
 scatter.int
 
-ggsave("shakenboxes.png",width = 4, height = 5, scale=0.5)
+ggsave("shakenboxes1.png",width = 7, height = 5, scale=0.7)
 
 ```
 
@@ -202,7 +202,7 @@ graph <- ggplot(data=shakendata.ci, aes(x = plotshaken)) +
   ylim(0, 1) +
   geom_hline(yintercept = 0.50, color = "red", linetype = "dashed") +scale_colour_manual(values = c("Dark Grey", "Black", "Red"), labels=c("no idea", "wrong", "correct"))+ scale_x_continuous(breaks = seq(from = 36, to = 48, by = 2))
 graph
-ggsave("shaken causal.png",width = 5, height = 5, scale=0.7)
+ggsave("shakenboxes2.png", width = 7, height = 5, scale=0.7)
 
 ```
 
