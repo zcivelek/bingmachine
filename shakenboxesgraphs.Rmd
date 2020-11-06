@@ -1,0 +1,209 @@
+---
+title: "shaken boxes graphs"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+rm(list=ls()) 
+shaken1<-read.csv("shakenchild1.csv", header=T)
+str(shaken1)
+```
+
+```{r}
+library(lme4)
+library(readr)
+library(tidyverse)
+library(sjPlot)
+library(ggthemes)
+library(gridExtra)
+library(reshape2)
+library(car)
+library(psych)
+library("ggpubr")
+library(dplyr)
+
+source("Roger_functions/diagnostic_fcns.r")
+source("Roger_functions/glmm_stability.r")
+source("Roger_functions/boot_glmm.r")
+```
+
+
+```{r}
+#preprocessing of data, scale categorical variables and define others as factor
+shaken1$z.trialno<-as.vector(scale(shaken1$trialno))
+shaken1$z.age=as.vector(scale(shaken1$age))
+shaken1$id=as.factor(shaken1$id)
+shaken1$sex=as.factor(shaken1$sex)
+shaken1$agecat=as.factor(shaken1$agecat)
+shaken1$z.agemonths=as.vector(scale(shaken1$agemonths))
+shaken1$explanation=as.factor(shaken1$explanation)
+
+
+shaken1$agecat=relevel(shaken1$agecat, ref="three")
+summary(shaken1)
+
+#coding dummy variables before centering the slopes
+shaken1$sex.m<-as.numeric(shaken1$sex==levels(shaken1$sex)[2])
+shaken1$agecat.four<-as.numeric(shaken1$agecat==levels(shaken1$agecat)[3])
+shaken1$agecat.five<-as.numeric(shaken1$agecat==levels(shaken1$agecat)[2])
+levels(shaken1$agecat)
+#centering the slopes
+shaken1$sex.m.c<-shaken1$sex.m -mean(shaken1$sex.m)
+shaken1$agecat.four.c=shaken1$agecat.four-mean(shaken1$agecat.four)
+shaken1$agecat.five.c=shaken1$agecat.five-mean(shaken1$agecat.five)
+str(shaken1)
+```
+
+#Amanda asked to make a shaken boxes graph that is similar to the graph we had in ripped foil for children
+
+#Scatterplot to see the performance across age in months
+```{r}
+#Running a separate model for the CI calculation.
+
+#running a new model for CI predictions
+#contr<-glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=10000000))
+#full.CI=glmer(correct ~ z.agemonths + z.trialno + sex.m.c + (1|id) + (1|boxtype) + (0+z.trialno|id),data=shaken1, family=binomial, control=contr)
+
+```
+
+```{r}
+#Getting confidence intervals for fitted values
+
+#boot.res=boot.glmm.pred(model.res=full.CI, excl.warnings=T, nboots=1000, resol=48, level=0.95, use="z.agemonths", n.cores="all-1", para=T)#with para=T your computer will get very slow so I recommend using this option particularly when you don't need to work with the PC in parallel (the CI calculation will be a lot faster though)
+
+#boot.res$ci.estimates
+#boot.res$ci.predicted
+#save.image("shaken1_child_CIs.RData")
+load("shaken1_child_CIs.RData")
+```
+
+```{r}
+####Overall performance across age.
+shaken1_separate <- shaken1 %>%
+  filter(!is.na(correct)) %>%
+  group_by(id,  agemonths, explanation) %>% 
+  summarize(correct= mean(correct))%>%
+  ungroup()%>%
+  group_by(agemonths)%>%
+  add_count(correct)
+
+plot.int=seq(from=min(shaken1_separate$agemonths),
+             to=max(shaken1_separate$agemonths),length.out=48)
+
+ci.data<-boot.res$ci.predicted #I reduced the number of values for the confidence intervals. did not match the actual data.
+#toDelete<- seq(2, nrow(ci.data),2)
+#ci.data<-ci.data[toDelete,]
+as.data.frame(ci.data)
+ci.data$plot.int <- c(plot.int)
+```
+
+
+```{r}
+scatter.int <- ggplot(data=ci.data, aes(x = plot.int)) +
+  geom_ribbon( aes(x = plot.int, y = fitted, ymin = lower.cl, ymax = upper.cl), fill = "grey", alpha = 0.5)+
+  geom_point(data=shaken1_separate, aes(x = agemonths, y = correct, color=explanation), size = shaken1_separate$n, alpha = 0.8) +
+  geom_ribbon( aes(x = plot.int, y = fitted, ymin = lower.cl, ymax = upper.cl), fill = "grey", alpha = 0.5) +
+ geom_line( aes(x = plot.int, y = fitted), lty = 2) +
+   theme_bw() +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+  xlab("Performance across age in months - Shaken boxes") +
+  ylab("Mean correct responses") +
+  ylim(0, 1) +
+  geom_hline(yintercept = 0.50, color = "red", linetype = "dashed") +scale_colour_manual(values = c("Dark Grey", "Black", "Red"))+ theme(legend.position= "none") + scale_x_continuous(breaks = seq(from = 36, to = 72, by = 4))
+scatter.int
+
+ggsave("performance in causal and arbitrary conditions.png",width = 10, height = 5, scale=0.7)
+
+```
+
+
+```{r setup, include=FALSE}
+shaken2<-read.csv("shakenchild2.csv", header=T)
+str(shaken2)
+```
+
+
+```{r}
+#preprocessing of data, scale categorical variables and define others as factor
+shaken2$z.trialno<-as.vector(scale(shaken2$trialno))
+shaken2$z.age=as.vector(scale(shaken2$age))
+shaken2$id=as.factor(shaken2$id)
+shaken2$sex=as.factor(shaken2$sex)
+shaken2$z.agemonths=as.vector(scale(shaken2$agemonths))
+shaken2$explanation=as.factor(shaken2$explanation)
+
+
+summary(shaken2)
+
+#coding dummy variables before centering the slopes
+shaken2$sex.m<-as.numeric(shaken2$sex==levels(shaken2$sex)[2])
+
+#centering the slopes
+shaken2$sex.m.c<-shaken2$sex.m -mean(shaken2$sex.m)
+
+str(shaken2)
+```
+
+#Amanda asked to make a shaken boxes graph that is similar to the graph we had in ripped foil for children
+
+#Scatterplot to see the performance across age in months
+```{r}
+#Running a separate model for the CI calculation.
+
+#running a new model for CI predictions
+contr<-glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=10000000))
+full.CI2=glmer(correct ~ z.agemonths + z.trialno + sex.m.c + (1|id) + (1|boxtype) + (0+z.trialno|id),data=shaken2, family=binomial, control=contr)
+
+```
+
+```{r}
+#Getting confidence intervals for fitted values
+
+boot.res=boot.glmm.pred(model.res=full.CI, excl.warnings=T, nboots=1000, resol=48, level=0.95, use="z.agemonths", n.cores="all-1", para=T)#with para=T your computer will get very slow so I recommend using this option particularly when you don't need to work with the PC in parallel (the CI calculation will be a lot faster though)
+
+boot.res$ci.estimates
+boot.res$ci.predicted
+save.image("shaken1_child_CIs.RData")
+load("shaken1_child_CIs.RData")
+```
+
+```{r}
+####Overall performance across age.
+shaken1_separate <- shaken1 %>%
+  filter(!is.na(correct)) %>%
+  group_by(id,  agemonths, explanation) %>% 
+  summarize(correct= mean(correct))%>%
+  ungroup()%>%
+  group_by(agemonths)%>%
+  add_count(correct)
+
+plot.int=seq(from=min(shaken1_separate$agemonths),
+             to=max(shaken1_separate$agemonths),length.out=48)
+
+ci.data<-boot.res$ci.predicted #I reduced the number of values for the confidence intervals. did not match the actual data.
+#toDelete<- seq(2, nrow(ci.data),2)
+#ci.data<-ci.data[toDelete,]
+as.data.frame(ci.data)
+ci.data$plot.int <- c(plot.int)
+```
+
+
+```{r}
+scatter.int <- ggplot(data=ci.data, aes(x = plot.int)) +
+  geom_ribbon( aes(x = plot.int, y = fitted, ymin = lower.cl, ymax = upper.cl), fill = "grey", alpha = 0.5)+
+  geom_point(data=shaken1_separate, aes(x = agemonths, y = correct, color=explanation), size = shaken1_separate$n, alpha = 0.8) +
+  geom_ribbon( aes(x = plot.int, y = fitted, ymin = lower.cl, ymax = upper.cl), fill = "grey", alpha = 0.5) +
+ geom_line( aes(x = plot.int, y = fitted), lty = 2) +
+   theme_bw() +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+  xlab("Performance across age in months - Shaken boxes") +
+  ylab("Mean correct responses") +
+  ylim(0, 1) +
+  geom_hline(yintercept = 0.50, color = "red", linetype = "dashed") +scale_colour_manual(values = c("Dark Grey", "Black", "Red"))+ theme(legend.position= "none") + scale_x_continuous(breaks = seq(from = 36, to = 72, by = 4))
+scatter.int
+
+ggsave("performance in causal and arbitrary conditions.png",width = 10, height = 5, scale=0.7)
+
+```
+
